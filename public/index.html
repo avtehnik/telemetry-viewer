@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>My first three.js app</title>
+    <style>
+        body {
+            margin: 10px;
+        }
+        #map {
+            height: 400px;
+            width: 400px;
+        }
+        #telemetrydata tr {
+            vertical-align: top;
+        }
+        .chartLink{
+            margin: 10px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    <script src="assets/leaflet.rotatedMarker.js"></script>
+    <script src="assets/vue_2.6.0.js"></script>
+    <script src="assets/chart.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script src="assets/fi/js/jquery.flightindicators.js"></script>
+    <link rel="stylesheet" type="text/css" href="assets/fi/css/flightindicators.css"/>
+
+
+</head>
+<body>
+<div id="app">
+    <div>
+        <table id="telemetrydata">
+            <tr>
+                <td>
+                    Load data file <input type="file" id="dataFile" accept=".txt" @input="selectDataFile"/>
+                </td>
+                <td>Total ditance {{this.telemetry.distance}}m</td>
+                <td>Distance to home {{this.telemetry.distanceToHome}}m</td>
+                <td>FM {{ telemetry.flightMode }}</td>
+                <td><button @click="updateRecording">Recording {{recording}}</button></td>
+            </tr>
+            <tr>
+                <td>
+                    <div id="map"></div>
+                    <a target="_blank" :href="gpsLink">Open in google</a>
+                </td>
+                <td>
+                    <h4>LINK_STATS</h4>
+                    <table>
+                        <tr>
+                            <th>Stat</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>Uplink RSSI 1</td>
+                            <td>{{ telemetry.linkStats.uplinkRssi1 }}</td>
+                        </tr>
+                        <tr>
+                            <td>Uplink RSSI 2</td>
+                            <td>{{ telemetry.linkStats.uplinkRssi2 }}</td>
+                        </tr>
+                        <tr>
+                            <td>Uplink Link Quality</td>
+                            <td>{{ telemetry.linkStats.uplinkLinkQuality }}</td>
+                        </tr>
+                        <tr>
+                            <td>Uplink SNR</td>
+                            <td>{{ telemetry.linkStats.uplinkSnr }}</td>
+                        </tr>
+                        <tr>
+                            <td>Active Antenna</td>
+                            <td>{{ telemetry.linkStats.activeAntenna }}</td>
+                        </tr>
+                        <tr>
+                            <td>RF Mode</td>
+                            <td>{{ telemetry.linkStats.rfMode }}</td>
+                        </tr>
+                        <tr>
+                            <td>Uplink TX Power</td>
+                            <td>{{ telemetry.linkStats.uplinkTxPower }}</td>
+                        </tr>
+                        <tr>
+                            <td>Downlink RSSI 1</td>
+                            <td>{{ telemetry.linkStats.downlinkRssi1 }}</td>
+                        </tr>
+                        <tr>
+                            <td>Downlink Link Quality</td>
+                            <td>{{ telemetry.linkStats.downlinkLinkQuality }}</td>
+                        </tr>
+                        <tr>
+                            <td>Downlink SNR</td>
+                            <td>{{ telemetry.linkStats.downlinkSnr }}</td>
+                        </tr>
+                        <tr>
+                            <td>RSSI</td>
+                            <td>{{ telemetry.linkStats.rssi }}</td>
+                        </tr>
+                    </table>
+                </td>
+                <td>
+                    <h4>GPS Telemetry</h4>
+                    <table>
+                        <tr>
+                            <th>Stat</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>Latitude</td>
+                            <td>{{ telemetry.gps.latitude }}</td>
+                        </tr>
+                        <tr>
+                            <td>Longitude</td>
+                            <td>{{ telemetry.gps.longitude }}</td>
+                        </tr>
+                        <tr>
+                            <td>Ground Speed (m/s)</td>
+                            <td>{{ telemetry.gps.groundSpeed.toFixed(3) }}</td>
+                        </tr>
+                        <tr>
+                            <td>Heading (degrees)</td>
+                            <td>{{ telemetry.gps.heading }}</td>
+                        </tr>
+                        <tr>
+                            <td>Altitude (m)</td>
+                            <td>{{ telemetry.gps.altitude }}</td>
+                        </tr>
+                        <tr>
+                            <td>Satellites</td>
+                            <td>{{ telemetry.gps.satellites }}</td>
+                        </tr>
+                    </table>
+                    <h4>Battery</h4>
+                    <table>
+                        <tr>
+                            <td>voltage</td>
+                            <td>{{ telemetry.battery.voltage }}</td>
+                        </tr>
+                        <tr>
+                            <td>current</td>
+                            <td>{{ telemetry.battery.current }}</td>
+                        </tr>
+                        <tr>
+                            <td>capacity</td>
+                            <td>{{ telemetry.battery.capacity }}</td>
+                        </tr>
+                        <tr>
+                            <td>pct</td>
+                            <td>{{ telemetry.battery.pct }}</td>
+                        </tr>
+                    </table>
+
+                </td>
+                <td>
+                    <h4>Attitude</h4>
+                    <table>
+                        <tr>
+                            <td>roll</td>
+                            <td>{{ telemetry.attitude.roll.toFixed(5) }}</td>
+                        </tr>
+                        <tr>
+                            <td>pitch</td>
+                            <td>{{ telemetry.attitude.pitch.toFixed(5) }}</td>
+                        </tr>
+                        <tr>
+                            <td>yaw</td>
+                            <td>{{ telemetry.attitude.yaw.toFixed(5) }}</td>
+                        </tr>
+                        <tr>
+                            <td>vario</td>
+                            <td>{{ telemetry.vario.vspd }}</td>
+                        </tr>
+                    </table>
+                </td>
+                <td>
+                    <span id="airspeed"></span>
+                    <span id="attitude"></span>
+                    <span id="altimeter"></span><br>
+                    <span id="turn_coordinator"></span>
+                    <span id="heading"></span>
+                    <span id="variometer"></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div id="linksArea">
+    <a href="#app">App</a>
+</div>
+<div id="chartsArea"></div>
+<script src="assets/js/helper.js"></script>
+<script src="assets/js/chart.js"></script>
+<script src="assets/js/map.js"></script>
+<script src="assets/main.js"></script>
+</body>
+</html>
